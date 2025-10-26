@@ -1,1 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🦇 Robocopy BAT Builder</title>
+    <style>
+        :root {
+            --bg: #131313;
+            --text: #E0E0E0;
+            --accent: #5897fe;
+            --secondary: #fcff66;
+            --border: #444;
+        }
 
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: system-ui, -apple-system, sans-serif;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        main {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        section {
+            margin-bottom: 20px;
+        }
+
+        textarea, input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 10px;
+            background: #222;
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 16px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        textarea:focus, input:focus, select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 5px var(--accent);
+            outline: none;
+        }
+
+        textarea {
+            height: 150px;
+            resize: vertical;
+        }
+
+        select {
+            cursor: pointer;
+        }
+
+        button {
+            background: var(--accent);
+            color: var(--bg);
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            min-height: 48px;
+            min-width: 48px;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #3b7de0;
+        }
+
+        .preset-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .preset-controls select {
+            flex: 1;
+        }
+
+        .command {
+            border: 1px solid var(--border);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .option-group {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border);
+        }
+
+        .option-group h3 {
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: var(--secondary);
+        }
+
+        label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+        }
+
+        input[type="checkbox"] {
+            accent-color: var(--accent);
+        }
+
+        input[type="number"] {
+            width: 80px;
+            padding: 5px;
+        }
+
+        .remove {
+            background: #ff6666;
+            align-self: flex-start;
+        }
+
+        .remove:hover {
+            background: #e04d4d;
+        }
+
+        #parse-section, #generated-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        #parse-btn, #copy-btn, #add-command {
+            align-self: flex-start;
+        }
+
+        @media (max-width: 600px) {
+            main {
+                padding: 10px;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            #parse-btn, #copy-btn, #add-command {
+                align-self: stretch;
+            }
+
+            .preset-controls {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>Robocopy BAT Builder</h1>
+        
+        <section class="preset-controls">
+            <select id="preset-select">
+                <option value="">Select a preset...</option>
+                <option value="preset1">Basic Mirror</option>
+                <option value="preset2">Incremental Sync</option>
+                <option value="preset3">Achive Copy</option>
+                <option value="preset4">Fast Network Copy</option>
+                <option value="preset5">Verified Backup</option>
+                <option value="preset6">Cloud Sync (OneDrive/Dropbox)</option>
+                <option value="preset7">Media Files Only</option>
+                <option value="preset8">Differential Backup</option>
+                <option value="preset9">Move Files (Delete Source)</option>
+                <option value="preset10">Large File Transfer</option>
+                <option value="preset11">Server to Server Replication</option>
+                <option value="preset12">Quick Directory Structure Only</option>
+                <option value="preset13">Photo/Video Backup</option>
+                <option value="preset14">Development Code Sync</option>
+                <option value="preset15">NAS Backup with Monitoring</option>
+            </select>
+            <button id="apply-preset">Apply Preset</button>
+        </section>
+
+        <section id="parse-section">
+            <textarea id="paste-bat" placeholder="Paste existing robocopy.bat here..."></textarea>
+            <button id="parse-btn">Parse</button>
+        </section>
+        <section id="commands-section">
+            <!-- Command blocks will be added here -->
+        </section>
+        <button id="add-command">Add Command</button>
+        <section id="generated-section">
+            <textarea id="generated-bat" readonly placeholder="Generated robocopy.bat will appear here..."></textarea>
+            <button id="copy-btn">Copy to Clipboard</button>
+        </section>
+    </main>
+    <script>
+        const PRESETS = {
+    preset1: {
+        name: 'Basic Mirror',
+        checkboxes: ['/MIR', '/S', '/Z', '/XO'],
+        numbers: {'/R': '1', '/W': '1'},
+        additional: '/TEE /XJ /FFT /XA:SH /ETA /LOG+:"!LogFile!"'
+    },
+    preset2: {
+        name: 'Incremental Sync',
+        checkboxes: ['/E', '/XO', '/A'],
+        numbers: {'/R': '1', '/W': '1', '/MINAGE': '1'},
+        additional: '/XJ /FFT /LOG+:"sync.log"'
+    },
+    preset3: {
+        name: 'Archive Copy',
+        checkboxes: ['/S', '/COPYALL', '/DCOPY:DAT', '/SECFIX', '/TIMFIX'],
+        numbers: {'/R': '1', '/W': '1'},
+        additional: '/A /M /LOG+:"archive.log"'
+    },
+    preset4: {
+        name: 'Fast Network Copy',
+        checkboxes: ['/E', '/J', '/COMPRESS'],
+        numbers: {'/MT': '32', '/R': '2', '/W': '3'},
+        additional: '/NFL /NDL /NJH /NJS /NC /NS /NP'
+    },
+    preset5: {
+        name: 'Verified Backup',
+        checkboxes: ['/MIR', '/COPYALL', '/Z', '/SEC', '/B'],
+        numbers: {'/R': '3', '/W': '5'},
+        additional: '/V /ETA /TEE /LOG+:"backup.log"'
+    },
+    preset6: {
+        name: 'Cloud Sync (OneDrive/Dropbox)',
+        checkboxes: ['/E', '/XO', '/FFT'],
+        numbers: {'/R': '2', '/W': '5'},
+        additional: '/XJ /XJD /XJF /XD "~$*" /XF "*.tmp" "~*.tmp" "desktop.ini" "Thumbs.db" /LOG+:"cloud_sync.log"'
+    },
+    preset7: {
+        name: 'Media Files Only',
+        checkboxes: ['/S', '/XO'],
+        numbers: {'/R': '1', '/W': '1'},
+        additional: '/XF *.txt *.doc* *.xls* *.pdf /XA:SH /LOG+:"media.log"'
+    },
+    preset8: {
+        name: 'Differential Backup',
+        checkboxes: ['/S', '/A', '/XO'],
+        numbers: {'/R': '2', '/W': '5'},
+        additional: '/XJ /FFT /ETA /LOG+:"differential_%date:~-4,4%%date:~-10,2%%date:~-7,2%.log"'
+    },
+    preset9: {
+        name: 'Move Files (Delete Source)',
+        checkboxes: ['/S', '/COPYALL'],
+        numbers: {'/R': '1', '/W': '1'},
+        additional: '/MOVE /XJ /LOG+:"move.log"'
+    },
+    preset10: {
+        name: 'Large File Transfer',
+        checkboxes: ['/J', '/Z', '/NOOFFLOAD'],
+        numbers: {'/MT': '8', '/R': '5', '/W': '30'},
+        additional: '/ETA /BYTES /NP /LOG+:"large_transfer.log"'
+    },
+    preset11: {
+        name: 'Server to Server Replication',
+        checkboxes: ['/MIR', '/COPYALL', '/SEC', '/B', '/DCOPY:DAT'],
+        numbers: {'/R': '5', '/W': '10'},
+        additional: '/V /ETA /TEE /XJ /LOG+:"replication_%COMPUTERNAME%.log"'
+    },
+    preset12: {
+        name: 'Quick Directory Structure Only',
+        checkboxes: ['/E', '/CREATE'],
+        numbers: {'/R': '0', '/W': '0'},
+        additional: '/NFL /NDL /LOG+:"structure.log"'
+    },
+    preset13: {
+        name: 'Photo/Video Backup',
+        checkboxes: ['/S', '/COPYALL', '/DCOPY:DAT', '/XO'],
+        numbers: {'/R': '2', '/W': '5'},
+        additional: '/XF *.db *.ini /XD "@eaDir" "System Volume Information" "$RECYCLE.BIN" /LOG+:"photos_%date:~-4,4%-%date:~-10,2%-%date:~-7,2%.log"'
+    },
+    preset14: {
+        name: 'Development Code Sync',
+        checkboxes: ['/E', '/XO', '/FFT'],
+        numbers: {'/R': '1', '/W': '1'},
+        additional: '/XD node_modules .git bin obj .vs .vscode dist build /XF *.exe *.dll *.pdb /LOG+:"dev_sync.log"'
+    },
+    preset15: {
+        name: 'NAS Backup with Monitoring',
+        checkboxes: ['/MIR', '/Z', '/COPYALL'],
+        numbers: {'/R': '10', '/W': '30', '/MT': '4'},
+        additional: '/MON:5 /TEE /ETA /XJ /LOG+:"nas_backup.log"'
+    }
+};
+
+        function parseCommandLine(line) {
+            const args = [];
+            let current = '';
+            let inQuote = false;
+            for (let char of line) {
+                if (char === '"') {
+                    inQuote = !inQuote;
+                } else if (char === ' ' && !inQuote) {
+                    if (current) {
+                        args.push(current);
+                        current = '';
+                    }
+                } else {
+                    current += char;
+                }
+            }
+            if (current) args.push(current);
+            return args;
+        }
+
+        function createCommand(source = '', dest = '', optsConfig = {}) {
+            if (!optsConfig.checkboxes) optsConfig.checkboxes = ['/MIR', '/S', '/Z', '/XO'];
+            if (!optsConfig.numbers) optsConfig.numbers = {'/R': '1', '/W': '1'};
+            if (!optsConfig.additional) optsConfig.additional = '/TEE /XJ /FFT /XA:SH /ETA /LOG+:"!LogFile!"';
+
+            const div = document.createElement('div');
+            div.className = 'command';
+
+            const sourceInput = document.createElement('input');
+            sourceInput.type = 'text';
+            sourceInput.className = 'source';
+            sourceInput.placeholder = 'Source directory';
+            sourceInput.value = source;
+            div.appendChild(sourceInput);
+
+            const destInput = document.createElement('input');
+            destInput.type = 'text';
+            destInput.className = 'dest';
+            destInput.placeholder = 'Destination directory';
+            destInput.value = dest;
+            div.appendChild(destInput);
+
+            const optionsDiv = document.createElement('div');
+            optionsDiv.className = 'options';
+
+            // Copy Options Group
+            const copyGroup = document.createElement('div');
+            copyGroup.className = 'option-group';
+            const copyHeader = document.createElement('h3');
+            copyHeader.textContent = 'Copy Options';
+            copyGroup.appendChild(copyHeader);
+
+            const copyCheckboxes = [
+                { opt: '/S', label: '/S (subdirs non-empty)' },
+                { opt: '/E', label: '/E (subdirs including empty)' },
+                { opt: '/MIR', label: '/MIR (mirror)' },
+                { opt: '/PURGE', label: '/PURGE (delete extra in dest)' },
+                { opt: '/COPYALL', label: '/COPYALL (all file info)' },
+                { opt: '/COPY:DAT', label: '/COPY:DAT (data, attrs, timestamps)' },
+                { opt: '/DCOPY:DAT', label: '/DCOPY:DAT (dir timestamps)' },
+                { opt: '/SEC', label: '/SEC (copy with security)' },
+                { opt: '/SECFIX', label: '/SECFIX (fix security)' },
+                { opt: '/TIMFIX', label: '/TIMFIX (fix timestamps)' }
+            ];
+
+            copyCheckboxes.forEach(ch => {
+                const label = document.createElement('label');
+                const input = document.createElement('input');
+                input.type = 'checkbox';
+                input.dataset.opt = ch.opt;
+                if (optsConfig.checkboxes && optsConfig.checkboxes.includes(ch.opt)) input.checked = true;
+                label.appendChild(input);
+                label.appendChild(document.createTextNode(ch.label));
+                copyGroup.appendChild(label);
+            });
+
+            div.appendChild(copyGroup);
+
+            // File Selection Group
+            const fileGroup = document.createElement('div');
+            fileGroup.className = 'option-group';
+            const fileHeader = document.createElement('h3');
+            fileHeader.textContent = 'File Selection';
+            fileGroup.appendChild(fileHeader);
+
+            const fileCheckboxes = [
+                { opt: '/A', label: '/A (archive attribute only)' },
+                { opt: '/M', label: '/M (archive attr, reset after)' },
+                { opt: '/XO', label: '/XO (exclude older)' },
+                { opt: '/XN', label: '/XN (exclude newer)' },
+                { opt: '/XL', label: '/XL (exclude lonely - not in src)' },
+                { opt: '/XX', label: '/XX (exclude extra - not in dest)' },
+                { opt: '/FFT', label: '/FFT (FAT file times)' },
+                { opt: '/IS', label: '/IS (include same files)' },
+                { opt: '/IT', label: '/IT (include tweaked files)' }
+            ];
+
+            fileCheckboxes.forEach(ch => {
+                const label = document.createElement('label');
+                const input = document.createElement('input');
+                input.type = 'checkbox';
+                input.dataset.opt = ch.opt;
+                if (optsConfig.checkboxes && optsConfig.checkboxes.includes(ch.opt)) input.checked = true;
+                label.appendChild(input);
+                label.appendChild(document.createTextNode(ch.label));
+                fileGroup.appendChild(label);
+            });
+
+            div.appendChild(fileGroup);
+
+            // Performance Group
+            const perfGroup = document.createElement('div');
+            perfGroup.className = 'option-group';
+            const perfHeader = document.createElement('h3');
+            perfHeader.textContent = 'Performance';
+            perfGroup.appendChild(perfHeader);
+
+            const perfCheckboxes = [
+                { opt: '/Z', label: '/Z (restartable mode)' },
+                { opt: '/B', label: '/B (backup mode)' },
+                { opt: '/J', label: '/J (unbuffered I/O)' },
+                { opt: '/NOOFFLOAD', label: '/NOOFFLOAD (no Windows copy offload)' },
+                { opt: '/COMPRESS', label: '/COMPRESS (network compression)' }
+            ];
+
+            perfCheckboxes.forEach(ch => {
+                const label = document.createElement('label');
+                const input = document.createElement('input');
+                input.type = 'checkbox';
+                input.dataset.opt = ch.opt;
+                if (optsConfig.checkboxes && optsConfig.checkboxes.includes(ch.opt)) input.checked = true;
+                label.appendChild(input);
+                label.appendChild(document.createTextNode(ch.label));
+                perfGroup.appendChild(label);
+            });
+
+            div.appendChild(perfGroup);
+
+            // Logging Group
+            const logGroup = document.createElement('div');
+            logGroup.className = 'option-group';
+            const logHeader = document.createElement('h3');
+            logHeader.textContent = 'Logging';
+            logGroup.appendChild(logHeader);
+
+            const logCheckboxes = [
+                { opt: '/V', label: '/V (verbose output)' },
+                { opt: '/TEE', label: '/TEE (output to console + log)' },
+                { opt: '/NP', label: '/NP (no progress)' },
+                { opt: '/NFL', label: '/NFL (no file list)' },
+                { opt: '/NDL', label: '/NDL (no directory list)' },
+                { opt: '/NJH', label: '/NJH (no job header)' },
+                { opt: '/NJS', label: '/NJS (no job summary)' },
+                { opt: '/NC', label: '/NC (no class)' },
+                { opt: '/NS', label: '/NS (no size)' },
+                { opt: '/ETA', label: '/ETA (show estimated time)' }
+            ];
+
+            logCheckboxes.forEach(ch => {
+                const label = document.createElement('label');
+                const input = document.createElement('input');
+                input.type = 'checkbox';
+                input.dataset.opt = ch.opt;
+                if (optsConfig.checkboxes && optsConfig.checkboxes.includes(ch.opt)) input.checked = true;
+                label.appendChild(input);
+                label.appendChild(document.createTextNode(ch.label));
+                logGroup.appendChild(label);
+            });
+
+            div.appendChild(logGroup);
+
+            // Other Options Group
+            const otherGroup = document.createElement('div');
+            otherGroup.className = 'option-group';
+            const otherHeader = document.createElement('h3');
+            otherHeader.textContent = 'Other Options';
+            otherGroup.appendChild(otherHeader);
+
+            const otherCheckboxes = [
+                { opt: '/XJ', label: '/XJ (exclude junctions)' },
+                { opt: '/XJD', label: '/XJD (exclude junction dirs)' },
+                { opt: '/XJF', label: '/XJF (exclude junction files)' },
+                { opt: '/MON:1', label: '/MON:1 (monitor, run again on change)' },
+                { opt: '/MOT:1', label: '/MOT:1 (monitor, wait n min)' },
+                { opt: '/CREATE', label: '/CREATE (create dir tree only)' }
+            ];
+
+            otherCheckboxes.forEach(ch => {
+                const label = document.createElement('label');
+                const input = document.createElement('input');
+                input.type = 'checkbox';
+                input.dataset.opt = ch.opt;
+                if (optsConfig.checkboxes && optsConfig.checkboxes.includes(ch.opt)) input.checked = true;
+                label.appendChild(input);
+                label.appendChild(document.createTextNode(ch.label));
+                otherGroup.appendChild(label);
+            });
+
+            div.appendChild(otherGroup);
+
+            // Numeric Options
+            const numGroup = document.createElement('div');
+            numGroup.className = 'option-group';
+            const numHeader = document.createElement('h3');
+            numHeader.textContent = 'Numeric Options';
+            numGroup.appendChild(numHeader);
+
+            const numbers = [
+                { opt: '/MT', label: '/MT (multi-thread): ', min: 1, max: 128 },
+                { opt: '/R', label: '/R (retries): ', min: 0 },
+                { opt: '/W', label: '/W (wait sec): ', min: 0 },
+                { opt: '/MINAGE', label: '/MINAGE (min file age days): ', min: 0 },
+                { opt: '/MAXAGE', label: '/MAXAGE (max file age days): ', min: 0 },
+                { opt: '/MINLAD', label: '/MINLAD (min last access days): ', min: 0 },
+                { opt: '/MAXLAD', label: '/MAXLAD (max last access days): ', min: 0 }
+            ];
+
+            numbers.forEach(num => {
+                const label = document.createElement('label');
+                label.appendChild(document.createTextNode(num.label));
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.dataset.opt = num.opt;
+                if (num.min !== undefined) input.min = num.min;
+                if (num.max !== undefined) input.max = num.max;
+                if (optsConfig.numbers && optsConfig.numbers[num.opt]) input.value = optsConfig.numbers[num.opt];
+                label.appendChild(input);
+                numGroup.appendChild(label);
+            });
+
+            div.appendChild(numGroup);
+
+            const additional = document.createElement('input');
+            additional.type = 'text';
+            additional.className = 'additional';
+            additional.placeholder = 'Additional options e.g. /XF *.tmp /XD temp /XA:SH /LOG:log.txt';
+            additional.value = optsConfig.additional || '';
+            div.appendChild(additional);
+
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'remove';
+            removeBtn.textContent = 'Remove';
+            removeBtn.addEventListener('click', () => {
+                div.remove();
+                updateGenerated();
+            });
+            div.appendChild(removeBtn);
+
+            // Add event listeners for real-time updates
+            div.querySelectorAll('input').forEach(input => {
+                const eventType = input.type === 'checkbox' ? 'change' : 'input';
+                input.addEventListener(eventType, updateGenerated);
+            });
+
+            return div;
+        }
+
+        function updateGenerated() {
+            const commands = document.querySelectorAll('.command');
+            const lines = ['@echo off', ''];
+            commands.forEach(cmd => {
+                const source = cmd.querySelector('.source').value.trim();
+                const dest = cmd.querySelector('.dest').value.trim();
+                if (!source || !dest) return;
+
+                const opts = [];
+
+                cmd.querySelectorAll('input[type="checkbox"]:checked').forEach(ch => {
+                    opts.push(ch.dataset.opt);
+                });
+
+                cmd.querySelectorAll('input[type="number"][data-opt]').forEach(num => {
+                    const val = num.value.trim();
+                    if (val) {
+                        opts.push(num.dataset.opt + ':' + val);
+                    }
+                });
+
+                const add = cmd.querySelector('.additional').value.trim();
+                if (add) opts.push(add);
+
+                let quotedSource = source.includes(' ') ? '"' + source + '"' : source;
+                let quotedDest = dest.includes(' ') ? '"' + dest + '"' : dest;
+
+                lines.push('robocopy ' + quotedSource + ' ' + quotedDest + ' ' + opts.join(' '));
+            });
+
+            document.getElementById('generated-bat').value = lines.join('\n');
+        }
+
+        document.getElementById('add-command').addEventListener('click', () => {
+            const commandsSection = document.getElementById('commands-section');
+            commandsSection.appendChild(createCommand());
+        });
+
+        document.getElementById('apply-preset').addEventListener('click', () => {
+            const presetId = document.getElementById('preset-select').value;
+            if (!presetId) {
+                alert('Please select a preset first');
+                return;
+            }
+            
+            const preset = PRESETS[presetId];
+            const commandsSection = document.getElementById('commands-section');
+            commandsSection.innerHTML = '';
+            commandsSection.appendChild(createCommand('', '', preset));
+            updateGenerated();
+        });
+
+        document.getElementById('parse-btn').addEventListener('click', () => {
+            const paste = document.getElementById('paste-bat').value;
+            const lines = paste.split('\n');
+            const commandsSection = document.getElementById('commands-section');
+            commandsSection.innerHTML = '';
+
+            let parsedAny = false;
+
+            lines.forEach(line => {
+                line = line.trim();
+                if (!line || line.toLowerCase().startsWith('rem') || line.toLowerCase().startsWith('@echo')) return;
+
+                const args = parseCommandLine(line);
+                if (args.length < 3 || args[0].toLowerCase() !== 'robocopy') return;
+
+                let source = args[1];
+                let dest = args[2];
+                let opts = args.slice(3);
+
+                if (source.startsWith('"') && source.endsWith('"')) source = source.slice(1, -1);
+                if (dest.startsWith('"') && dest.endsWith('"')) dest = dest.slice(1, -1);
+
+                const optsConfig = { checkboxes: [], numbers: {}, additional: '' };
+
+                const allCheckboxOpts = [
+                    '/S', '/E', '/MIR', '/PURGE', '/COPYALL', '/COPY:DAT', '/DCOPY:DAT', 
+                    '/SEC', '/SECFIX', '/TIMFIX', '/A', '/M', '/XO', '/XN', '/XL', '/XX', 
+                    '/FFT', '/IS', '/IT', '/Z', '/B', '/J', '/NOOFFLOAD', '/COMPRESS', 
+                    '/V', '/TEE', '/NP', '/NFL', '/NDL', '/NJH', '/NJS', '/NC', '/NS', 
+                    '/ETA', '/XJ', '/XJD', '/XJF', '/MON:1', '/MOT:1', '/CREATE'
+                ];
+
+                const remaining = [];
+                opts.forEach(opt => {
+                    const upperOpt = opt.toUpperCase();
+                    if (allCheckboxOpts.includes(upperOpt)) {
+                        optsConfig.checkboxes.push(upperOpt);
+                    } else if (upperOpt.startsWith('/MT:') || upperOpt.startsWith('/R:') || 
+                               upperOpt.startsWith('/W:') || upperOpt.startsWith('/MINAGE:') || 
+                               upperOpt.startsWith('/MAXAGE:') || upperOpt.startsWith('/MINLAD:') || 
+                               upperOpt.startsWith('/MAXLAD:')) {
+                        const [key, val] = upperOpt.split(':');
+                        optsConfig.numbers[key] = val;
+                    } else {
+                        remaining.push(opt);
+                    }
+                });
+
+                optsConfig.additional = remaining.join(' ');
+
+                commandsSection.appendChild(createCommand(source, dest, optsConfig));
+                parsedAny = true;
+            });
+
+            if (!parsedAny) {
+                commandsSection.appendChild(createCommand());
+            }
+
+            updateGenerated();
+        });
+
+        document.getElementById('copy-btn').addEventListener('click', () => {
+            const text = document.getElementById('generated-bat').value;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Copied to clipboard!');
+            }).catch(err => {
+                alert('Failed to copy: ' + err);
+            });
+        });
+
+        // Initialize with one empty command using Preset 1 defaults
+        document.getElementById('commands-section').appendChild(createCommand());
+    </script>
+</body>
+</html>
