@@ -176,6 +176,76 @@
                 flex-direction: column;
             }
         }
+      
+      /* === GUIDE STYLING === */
+    #guide-section {
+        margin-top: 40px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: #1a1a1a;
+        padding: 15px;
+    }
+
+    #guide-section h2 {
+        color: var(--secondary);
+        cursor: pointer;
+        text-align: center;
+        font-size: 20px;
+        margin: 0;
+    }
+
+    #guide-content {
+        display: none;
+        margin-top: 15px;
+        max-height: 600px;
+        overflow-y: auto;
+        background: #111;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 20px;
+    }
+
+    #guide-section.open #guide-content {
+        display: block;
+    }
+
+    /* Markdown-rendered content */
+    #guide-content h1, #guide-content h2, #guide-content h3 {
+        color: var(--secondary);
+        margin-top: 1em;
+    }
+
+    #guide-content code {
+        background: #222;
+        color: var(--secondary);
+        padding: 2px 4px;
+        border-radius: 4px;
+    }
+
+    #guide-content pre {
+        background: #0d0d0d;
+        padding: 10px;
+        border-radius: 4px;
+        overflow-x: auto;
+    }
+
+    #guide-content table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 1em 0;
+        font-size: 14px;
+    }
+
+    #guide-content th, #guide-content td {
+        border: 1px solid var(--border);
+        padding: 6px 8px;
+        text-align: left;
+    }
+
+    #guide-content th {
+        background: #222;
+        color: var(--secondary);
+    }
     </style>
 </head>
 <body>
@@ -187,10 +257,19 @@
                 <option value="">Select a preset...</option>
                 <option value="preset1">Basic Mirror</option>
                 <option value="preset2">Incremental Sync</option>
-                <option value="preset3">Cloud Sync (OneDrive/Dropbox)</option>
-                <option value="preset4">Media Files Only</option>
-                <option value="preset5">Differential Backup</option>
-                <option value="preset6">Photo/Video Backup</option>
+                <option value="preset3">Archive Copy</option>
+                <option value="preset4">Fast Network Copy</option>
+                <option value="preset5">Verified Backup</option>
+                <option value="preset6">Cloud Sync (OneDrive/Dropbox)</option>
+                <option value="preset7">Media Files Only</option>
+                <option value="preset8">Differential Backup</option>
+                <option value="preset9">Move Files (Delete Source)</option>
+                <option value="preset10">Large File Transfer</option>
+                <option value="preset11">Server to Server Replication</option>
+                <option value="preset12">Quick Directory Structure Only</option>
+                <option value="preset13">Photo/Video Backup</option>
+                <option value="preset14">Development Code Sync</option>
+                <option value="preset15">NAS Backup with Monitoring</option>
             </select>
             <button id="apply-preset">Apply Preset</button>
         </section>
@@ -206,11 +285,20 @@
         
         <button id="add-command">Add Command</button>
         
+        <!-- Existing builder UI -->
         <section id="generated-section">
-            <textarea id="generated-bat" readonly placeholder="Generated robocopy.bat will appear here..."></textarea>
-            <button id="copy-btn">Copy to Clipboard</button>
+            <textarea id="generated-bat" readonly placeholder="Generated robocopy.bat will appear here..." style="width:100%;height:150px;background:#222;color:#fff;border:1px solid var(--border);border-radius:4px;"></textarea>
+            <button id="copy-btn" style="margin-top:10px;background:var(--accent);color:#000;border:none;padding:10px 20px;border-radius:4px;">Copy to Clipboard</button>
         </section>
+
+        <!-- === Robocopy Switches Guide === -->
+        <section id="guide-section">
+            <h2>📘 Robocopy Switches – Complete Guide (Click to Expand)</h2>
+            <div id="guide-content"></div>
+        </section>
+                
     </main>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
         const PRESETS = {
             preset1: {
@@ -226,30 +314,209 @@
                 additional: '/XJ /FFT /LOG+:"sync.log"'
             },
             preset3: {
+                name: 'Archive Copy',
+                checkboxes: ['/S', '/COPYALL', '/DCOPY:DAT', '/SECFIX', '/TIMFIX'],
+                numbers: {'/R': '1', '/W': '1'},
+                additional: '/A /M /LOG+:"archive.log"'
+            },
+            preset4: {
+                name: 'Fast Network Copy',
+                checkboxes: ['/E', '/J', '/COMPRESS'],
+                numbers: {'/MT': '32', '/R': '2', '/W': '3'},
+                additional: '/NFL /NDL /NJH /NJS /NC /NS /NP'
+            },
+            preset5: {
+                name: 'Verified Backup',
+                checkboxes: ['/MIR', '/COPYALL', '/Z', '/SEC', '/B'],
+                numbers: {'/R': '3', '/W': '5'},
+                additional: '/V /ETA /TEE /LOG+:"backup.log"'
+            },
+            preset6: {
                 name: 'Cloud Sync (OneDrive/Dropbox)',
                 checkboxes: ['/E', '/XO', '/FFT'],
                 numbers: {'/R': '2', '/W': '5'},
                 additional: '/XJ /XJD /XJF /XD "~$*" /XF "*.tmp" "~*.tmp" "desktop.ini" "Thumbs.db" /LOG+:"cloud_sync.log"'
             },
-            preset4: {
+            preset7: {
                 name: 'Media Files Only',
                 checkboxes: ['/S', '/XO'],
                 numbers: {'/R': '1', '/W': '1'},
                 additional: '/XF *.txt *.doc* *.xls* *.pdf /XA:SH /LOG+:"media.log"'
             },
-            preset5: {
+            preset8: {
                 name: 'Differential Backup',
                 checkboxes: ['/S', '/A', '/XO'],
                 numbers: {'/R': '2', '/W': '5'},
                 additional: '/XJ /FFT /ETA /LOG+:"differential_%date:~-4,4%%date:~-10,2%%date:~-7,2%.log"'
             },
-            preset6: {
+            preset9: {
+                name: 'Move Files (Delete Source)',
+                checkboxes: ['/S', '/COPYALL'],
+                numbers: {'/R': '1', '/W': '1'},
+                additional: '/MOVE /XJ /LOG+:"move.log"'
+            },
+            preset10: {
+                name: 'Large File Transfer',
+                checkboxes: ['/J', '/Z', '/NOOFFLOAD'],
+                numbers: {'/MT': '8', '/R': '5', '/W': '30'},
+                additional: '/ETA /BYTES /NP /LOG+:"large_transfer.log"'
+            },
+            preset11: {
+                name: 'Server to Server Replication',
+                checkboxes: ['/MIR', '/COPYALL', '/SEC', '/B', '/DCOPY:DAT'],
+                numbers: {'/R': '5', '/W': '10'},
+                additional: '/V /ETA /TEE /XJ /LOG+:"replication_%COMPUTERNAME%.log"'
+            },
+            preset12: {
+                name: 'Quick Directory Structure Only',
+                checkboxes: ['/E', '/CREATE'],
+                numbers: {'/R': '0', '/W': '0'},
+                additional: '/NFL /NDL /LOG+:"structure.log"'
+            },
+            preset13: {
                 name: 'Photo/Video Backup',
                 checkboxes: ['/S', '/COPYALL', '/DCOPY:DAT', '/XO'],
                 numbers: {'/R': '2', '/W': '5'},
                 additional: '/XF *.db *.ini /XD "@eaDir" "System Volume Information" "$RECYCLE.BIN" /LOG+:"photos_%date:~-4,4%-%date:~-10,2%-%date:~-7,2%.log"'
+            },
+            preset14: {
+                name: 'Development Code Sync',
+                checkboxes: ['/E', '/XO', '/FFT'],
+                numbers: {'/R': '1', '/W': '1'},
+                additional: '/XD node_modules .git bin obj .vs .vscode dist build /XF *.exe *.dll *.pdb /LOG+:"dev_sync.log"'
+            },
+            preset15: {
+                name: 'NAS Backup with Monitoring',
+                checkboxes: ['/MIR', '/Z', '/COPYALL'],
+                numbers: {'/R': '10', '/W': '30', '/MT': '4'},
+                additional: '/MON:5 /TEE /ETA /XJ /LOG+:"nas_backup.log"'
             }
         };
+      
+      
+      
+      // === GUIDE MARKDOWN CONTENT ===
+        const guideMarkdown = `
+# **Robocopy Switches – Complete Guide**
+
+Robocopy (Robust File Copy) is a command-line file replication tool included with Windows. It offers advanced features for copying, mirroring, and synchronising files and directories.
+
+---
+
+## **1. Copy Options**
+
+| Switch | Description | Notes / Example |
+|---------|--------------|-----------------|
+| **/S** | Copies subdirectories but **excludes empty** ones. | \`robocopy C:\\Source D:\\Backup /S\` |
+| **/E** | Copies **all subdirectories**, including empty ones. | Preserves full directory structures. |
+| **/MIR** | **Mirrors** a directory tree (equivalent to \`/E /PURGE\`). | ⚠️ Deletes files/folders in the destination that no longer exist in the source. |
+| **/PURGE** | Deletes destination files/folders no longer in source. | Often used with \`/E\`. |
+| **/COPYALL** | Copies **all file info** – equivalent to \`/COPY:DATSOU\`. | Copies Data, Attributes, Timestamps, Security (ACLs), Owner, Auditing info. |
+| **/COPY:DAT** | Copies **Data**, **Attributes**, and **Timestamps**. | Default if unspecified. |
+| **/DCOPY:DAT** | Copies **directory timestamps**, attributes, and data. | Preserves directory modified times. |
+| **/SEC** | Copies files **with security (ACLs)**. | Equivalent to \`/COPY:DATS\`. |
+| **/SECFIX** | Fixes **file security** on all destination files. | Repairs permissions even on skipped files. |
+| **/TIMFIX** | Fixes **timestamps** on all destination files. | Ensures timestamp accuracy. |
+
+---
+
+## **2. File Selection Options**
+
+| Switch | Description | Notes / Example |
+|---------|--------------|-----------------|
+| **/A** | Copies only files with the **archive attribute**. | For incremental backups. |
+| **/M** | Copies archive files and **resets** the attribute. | Example: \`robocopy C:\\Src D:\\Dest /M\` |
+| **/XO** | **Excludes older** files. | Avoids overwriting newer destination data. |
+| **/XN** | **Excludes newer** files. | Useful for partial restores. |
+| **/XL** | **Excludes lonely** files (exist only in source). | Opposite of \`/XX\`. |
+| **/XX** | **Excludes extra** files (exist only in destination). | Prevents unwanted deletion. |
+| **/FFT** | Assumes **FAT file time** precision (2 sec). | Use for cross-filesystem copies. |
+| **/IS** | **Includes same** files. | Forces overwrite. |
+| **/IT** | **Includes tweaked** files. | Detects minor changes. |
+
+---
+
+## **3. Performance Options**
+
+| Switch | Description | Notes / Example |
+|---------|--------------|-----------------|
+| **/Z** | Enables **restartable mode**. | Slower but resilient to interruptions. |
+| **/B** | Runs in **Backup mode**. | Requires admin rights. |
+| **/J** | Uses **unbuffered I/O**. | Ideal for large files. |
+| **/NOOFFLOAD** | Disables **copy offload**. | Avoids hardware acceleration issues. |
+| **/COMPRESS** | Enables **SMB compression** (Win11/Server 2022+). | Reduces network load. |
+
+---
+
+## **4. Logging Options**
+
+| Switch | Description |
+|---------|-------------|
+| **/V** | Verbose output (shows skipped files). |
+| **/TEE** | Output to console **and** log file. |
+| **/NP** | No progress percentage. |
+| **/NFL** | No file list. |
+| **/NDL** | No directory list. |
+| **/NJH** | No job header. |
+| **/NJS** | No job summary. |
+| **/NC** | No class info. |
+| **/NS** | No size info. |
+| **/ETA** | Displays estimated time remaining. |
+
+---
+
+## **5. Other Options**
+
+| Switch | Description |
+|---------|-------------|
+| **/XJ** | Excludes junction points. |
+| **/XJD** | Excludes junction directories. |
+| **/XJF** | Excludes junction files. |
+| **/MON:1** | Monitors and reruns when ≥1 file changes. |
+| **/MOT:1** | Monitors and reruns every 1 minute if changes occur. |
+| **/CREATE** | Creates directory tree and empty files only. |
+
+---
+
+## **6. Numeric Options**
+
+| Switch | Description | Default |
+|---------|-------------|----------|
+| **/MT[:n]** | Multi-threaded copy (max 128). | 8 |
+| **/R:n** | Retry count. | 1,000,000 |
+| **/W:n** | Wait time between retries (seconds). | 30 |
+| **/MINAGE:n** | Minimum file age (days). | — |
+| **/MAXAGE:n** | Maximum file age (days). | — |
+| **/MINLAD:n** | Minimum last access (days). | — |
+| **/MAXLAD:n** | Maximum last access (days). | — |
+
+---
+
+### **Example Commands**
+
+Mirror directory:
+\`\`\`powershell
+robocopy "C:\\Data" "D:\\Backup" /MIR /COPYALL /R:1 /W:1 /LOG:C:\\Logs\\mirror.log
+\`\`\`
+
+Incremental backup:
+\`\`\`powershell
+robocopy "C:\\Work" "E:\\Backup" /M /E /ETA
+\`\`\`
+
+Continuous monitor:
+\`\`\`powershell
+robocopy "C:\\Source" "D:\\Mirror" /MIR /MON:1 /MOT:1 /LOG:C:\\Logs\\sync.log
+\`\`\`
+
+---
+
+**References:**  
+- [Microsoft Docs – Robocopy](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/robocopy)  
+- [Microsoft Learn – Robocopy Examples](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/robocopy-examples)
+        `;
+      
+      
 
         function parseCommandLine(line) {
             const args = [];
@@ -711,9 +978,17 @@
                 alert('Failed to copy: ' + err);
             });
         });
+      
+      // === TOGGLE GUIDE VISIBILITY ===
+        document.querySelector('#guide-section h2').addEventListener('click', () => {
+            document.getElementById('guide-section').classList.toggle('open');
+        });
 
         // Initialize with one empty command using Preset 1 defaults
         document.getElementById('commands-section').appendChild(createCommand());
+      
+      // === RENDER MARKDOWN ===
+        document.getElementById('guide-content').innerHTML = marked.parse(guideMarkdown);
     </script>
 </body>
 </html>
