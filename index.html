@@ -34,7 +34,7 @@
         }
 
         h1 {
-            font-size: 24px;
+            font-size: 28px;
             margin-bottom: 20px;
             text-align: center;
         }
@@ -187,19 +187,10 @@
                 <option value="">Select a preset...</option>
                 <option value="preset1">Basic Mirror</option>
                 <option value="preset2">Incremental Sync</option>
-                <option value="preset3">Achive Copy</option>
-                <option value="preset4">Fast Network Copy</option>
-                <option value="preset5">Verified Backup</option>
-                <option value="preset6">Cloud Sync (OneDrive/Dropbox)</option>
-                <option value="preset7">Media Files Only</option>
-                <option value="preset8">Differential Backup</option>
-                <option value="preset9">Move Files (Delete Source)</option>
-                <option value="preset10">Large File Transfer</option>
-                <option value="preset11">Server to Server Replication</option>
-                <option value="preset12">Quick Directory Structure Only</option>
-                <option value="preset13">Photo/Video Backup</option>
-                <option value="preset14">Development Code Sync</option>
-                <option value="preset15">NAS Backup with Monitoring</option>
+                <option value="preset3">Cloud Sync (OneDrive/Dropbox)</option>
+                <option value="preset4">Media Files Only</option>
+                <option value="preset5">Differential Backup</option>
+                <option value="preset6">Photo/Video Backup</option>
             </select>
             <button id="apply-preset">Apply Preset</button>
         </section>
@@ -208,10 +199,13 @@
             <textarea id="paste-bat" placeholder="Paste existing robocopy.bat here..."></textarea>
             <button id="parse-btn">Parse</button>
         </section>
+        
         <section id="commands-section">
             <!-- Command blocks will be added here -->
         </section>
+        
         <button id="add-command">Add Command</button>
+        
         <section id="generated-section">
             <textarea id="generated-bat" readonly placeholder="Generated robocopy.bat will appear here..."></textarea>
             <button id="copy-btn">Copy to Clipboard</button>
@@ -219,97 +213,43 @@
     </main>
     <script>
         const PRESETS = {
-    preset1: {
-        name: 'Basic Mirror',
-        checkboxes: ['/MIR', '/S', '/Z', '/XO'],
-        numbers: {'/R': '1', '/W': '1'},
-        additional: '/TEE /XJ /FFT /XA:SH /ETA /LOG+:"!LogFile!"'
-    },
-    preset2: {
-        name: 'Incremental Sync',
-        checkboxes: ['/E', '/XO', '/A'],
-        numbers: {'/R': '1', '/W': '1', '/MINAGE': '1'},
-        additional: '/XJ /FFT /LOG+:"sync.log"'
-    },
-    preset3: {
-        name: 'Archive Copy',
-        checkboxes: ['/S', '/COPYALL', '/DCOPY:DAT', '/SECFIX', '/TIMFIX'],
-        numbers: {'/R': '1', '/W': '1'},
-        additional: '/A /M /LOG+:"archive.log"'
-    },
-    preset4: {
-        name: 'Fast Network Copy',
-        checkboxes: ['/E', '/J', '/COMPRESS'],
-        numbers: {'/MT': '32', '/R': '2', '/W': '3'},
-        additional: '/NFL /NDL /NJH /NJS /NC /NS /NP'
-    },
-    preset5: {
-        name: 'Verified Backup',
-        checkboxes: ['/MIR', '/COPYALL', '/Z', '/SEC', '/B'],
-        numbers: {'/R': '3', '/W': '5'},
-        additional: '/V /ETA /TEE /LOG+:"backup.log"'
-    },
-    preset6: {
-        name: 'Cloud Sync (OneDrive/Dropbox)',
-        checkboxes: ['/E', '/XO', '/FFT'],
-        numbers: {'/R': '2', '/W': '5'},
-        additional: '/XJ /XJD /XJF /XD "~$*" /XF "*.tmp" "~*.tmp" "desktop.ini" "Thumbs.db" /LOG+:"cloud_sync.log"'
-    },
-    preset7: {
-        name: 'Media Files Only',
-        checkboxes: ['/S', '/XO'],
-        numbers: {'/R': '1', '/W': '1'},
-        additional: '/XF *.txt *.doc* *.xls* *.pdf /XA:SH /LOG+:"media.log"'
-    },
-    preset8: {
-        name: 'Differential Backup',
-        checkboxes: ['/S', '/A', '/XO'],
-        numbers: {'/R': '2', '/W': '5'},
-        additional: '/XJ /FFT /ETA /LOG+:"differential_%date:~-4,4%%date:~-10,2%%date:~-7,2%.log"'
-    },
-    preset9: {
-        name: 'Move Files (Delete Source)',
-        checkboxes: ['/S', '/COPYALL'],
-        numbers: {'/R': '1', '/W': '1'},
-        additional: '/MOVE /XJ /LOG+:"move.log"'
-    },
-    preset10: {
-        name: 'Large File Transfer',
-        checkboxes: ['/J', '/Z', '/NOOFFLOAD'],
-        numbers: {'/MT': '8', '/R': '5', '/W': '30'},
-        additional: '/ETA /BYTES /NP /LOG+:"large_transfer.log"'
-    },
-    preset11: {
-        name: 'Server to Server Replication',
-        checkboxes: ['/MIR', '/COPYALL', '/SEC', '/B', '/DCOPY:DAT'],
-        numbers: {'/R': '5', '/W': '10'},
-        additional: '/V /ETA /TEE /XJ /LOG+:"replication_%COMPUTERNAME%.log"'
-    },
-    preset12: {
-        name: 'Quick Directory Structure Only',
-        checkboxes: ['/E', '/CREATE'],
-        numbers: {'/R': '0', '/W': '0'},
-        additional: '/NFL /NDL /LOG+:"structure.log"'
-    },
-    preset13: {
-        name: 'Photo/Video Backup',
-        checkboxes: ['/S', '/COPYALL', '/DCOPY:DAT', '/XO'],
-        numbers: {'/R': '2', '/W': '5'},
-        additional: '/XF *.db *.ini /XD "@eaDir" "System Volume Information" "$RECYCLE.BIN" /LOG+:"photos_%date:~-4,4%-%date:~-10,2%-%date:~-7,2%.log"'
-    },
-    preset14: {
-        name: 'Development Code Sync',
-        checkboxes: ['/E', '/XO', '/FFT'],
-        numbers: {'/R': '1', '/W': '1'},
-        additional: '/XD node_modules .git bin obj .vs .vscode dist build /XF *.exe *.dll *.pdb /LOG+:"dev_sync.log"'
-    },
-    preset15: {
-        name: 'NAS Backup with Monitoring',
-        checkboxes: ['/MIR', '/Z', '/COPYALL'],
-        numbers: {'/R': '10', '/W': '30', '/MT': '4'},
-        additional: '/MON:5 /TEE /ETA /XJ /LOG+:"nas_backup.log"'
-    }
-};
+            preset1: {
+                name: 'Basic Mirror',
+                checkboxes: ['/MIR', '/S', '/Z', '/XO'],
+                numbers: {'/R': '1', '/W': '1'},
+                additional: '/TEE /XJ /FFT /XA:SH /ETA /LOG+:"!LogFile!"'
+            },
+            preset2: {
+                name: 'Incremental Sync',
+                checkboxes: ['/E', '/XO', '/A'],
+                numbers: {'/R': '1', '/W': '1', '/MINAGE': '1'},
+                additional: '/XJ /FFT /LOG+:"sync.log"'
+            },
+            preset3: {
+                name: 'Cloud Sync (OneDrive/Dropbox)',
+                checkboxes: ['/E', '/XO', '/FFT'],
+                numbers: {'/R': '2', '/W': '5'},
+                additional: '/XJ /XJD /XJF /XD "~$*" /XF "*.tmp" "~*.tmp" "desktop.ini" "Thumbs.db" /LOG+:"cloud_sync.log"'
+            },
+            preset4: {
+                name: 'Media Files Only',
+                checkboxes: ['/S', '/XO'],
+                numbers: {'/R': '1', '/W': '1'},
+                additional: '/XF *.txt *.doc* *.xls* *.pdf /XA:SH /LOG+:"media.log"'
+            },
+            preset5: {
+                name: 'Differential Backup',
+                checkboxes: ['/S', '/A', '/XO'],
+                numbers: {'/R': '2', '/W': '5'},
+                additional: '/XJ /FFT /ETA /LOG+:"differential_%date:~-4,4%%date:~-10,2%%date:~-7,2%.log"'
+            },
+            preset6: {
+                name: 'Photo/Video Backup',
+                checkboxes: ['/S', '/COPYALL', '/DCOPY:DAT', '/XO'],
+                numbers: {'/R': '2', '/W': '5'},
+                additional: '/XF *.db *.ini /XD "@eaDir" "System Volume Information" "$RECYCLE.BIN" /LOG+:"photos_%date:~-4,4%-%date:~-10,2%-%date:~-7,2%.log"'
+            }
+        };
 
         function parseCommandLine(line) {
             const args = [];
@@ -331,7 +271,7 @@
             return args;
         }
 
-        function createCommand(source = '', dest = '', optsConfig = {}) {
+        function createCommand(source = '', dest = '', optsConfig = {}, isMultiDest = false) {
             if (!optsConfig.checkboxes) optsConfig.checkboxes = ['/MIR', '/S', '/Z', '/XO'];
             if (!optsConfig.numbers) optsConfig.numbers = {'/R': '1', '/W': '1'};
             if (!optsConfig.additional) optsConfig.additional = '/TEE /XJ /FFT /XA:SH /ETA /LOG+:"!LogFile!"';
@@ -339,6 +279,22 @@
             const div = document.createElement('div');
             div.className = 'command';
 
+            // Copy mode toggle
+            const copyModeToggle = document.createElement('div');
+            copyModeToggle.className = 'copy-mode-toggle';
+            copyModeToggle.innerHTML = `
+                <label>
+                    <input type="radio" name="copyMode" value="single" ${!isMultiDest ? 'checked' : ''}>
+                    Single Destination
+                </label>
+                <label>
+                    <input type="radio" name="copyMode" value="multi" ${isMultiDest ? 'checked' : ''}>
+                    Multiple Destinations
+                </label>
+            `;
+            div.appendChild(copyModeToggle);
+
+            // Source input
             const sourceInput = document.createElement('input');
             sourceInput.type = 'text';
             sourceInput.className = 'source';
@@ -346,203 +302,145 @@
             sourceInput.value = source;
             div.appendChild(sourceInput);
 
+            // Single destination input
             const destInput = document.createElement('input');
             destInput.type = 'text';
             destInput.className = 'dest';
             destInput.placeholder = 'Destination directory';
             destInput.value = dest;
+            if (isMultiDest) destInput.style.display = 'none';
             div.appendChild(destInput);
 
+            // Multiple destinations container
+            const destinationsContainer = document.createElement('div');
+            destinationsContainer.className = 'destinations';
+            if (!isMultiDest) destinationsContainer.style.display = 'none';
+            
+            const destinationsHeader = document.createElement('div');
+            destinationsHeader.textContent = 'Destination Directories:';
+            destinationsContainer.appendChild(destinationsHeader);
+            
+            const destinationsList = document.createElement('div');
+            destinationsList.className = 'destinations-list';
+            
+            // Add initial destination if multi-dest mode
+            if (isMultiDest && dest) {
+                const destItem = createDestinationItem(dest);
+                destinationsList.appendChild(destItem);
+            } else if (isMultiDest) {
+                const destItem = createDestinationItem('');
+                destinationsList.appendChild(destItem);
+            }
+            
+            destinationsContainer.appendChild(destinationsList);
+            
+            const addDestBtn = document.createElement('button');
+            addDestBtn.className = 'add-destination';
+            addDestBtn.textContent = 'Add Destination';
+            addDestBtn.addEventListener('click', () => {
+                destinationsList.appendChild(createDestinationItem(''));
+                updateGenerated();
+            });
+            destinationsContainer.appendChild(addDestBtn);
+            
+            div.appendChild(destinationsContainer);
+
+            // Options container
             const optionsDiv = document.createElement('div');
             optionsDiv.className = 'options';
 
             // Copy Options Group
-            const copyGroup = document.createElement('div');
-            copyGroup.className = 'option-group';
-            const copyHeader = document.createElement('h3');
-            copyHeader.textContent = 'Copy Options';
-            copyGroup.appendChild(copyHeader);
-
-            const copyCheckboxes = [
-                { opt: '/S', label: '/S (subdirs non-empty)' },
-                { opt: '/E', label: '/E (subdirs including empty)' },
-                { opt: '/MIR', label: '/MIR (mirror)' },
-                { opt: '/PURGE', label: '/PURGE (delete extra in dest)' },
-                { opt: '/COPYALL', label: '/COPYALL (all file info)' },
-                { opt: '/COPY:DAT', label: '/COPY:DAT (data, attrs, timestamps)' },
-                { opt: '/DCOPY:DAT', label: '/DCOPY:DAT (dir timestamps)' },
-                { opt: '/SEC', label: '/SEC (copy with security)' },
-                { opt: '/SECFIX', label: '/SECFIX (fix security)' },
-                { opt: '/TIMFIX', label: '/TIMFIX (fix timestamps)' }
-            ];
-
-            copyCheckboxes.forEach(ch => {
-                const label = document.createElement('label');
-                const input = document.createElement('input');
-                input.type = 'checkbox';
-                input.dataset.opt = ch.opt;
-                if (optsConfig.checkboxes && optsConfig.checkboxes.includes(ch.opt)) input.checked = true;
-                label.appendChild(input);
-                label.appendChild(document.createTextNode(ch.label));
-                copyGroup.appendChild(label);
-            });
-
-            div.appendChild(copyGroup);
+            const copyGroup = createOptionGroup(
+                'Copy Options',
+                [
+                    { opt: '/S', label: '/S (subdirs non-empty)' },
+                    { opt: '/E', label: '/E (subdirs including empty)' },
+                    { opt: '/MIR', label: '/MIR (mirror)' },
+                    { opt: '/PURGE', label: '/PURGE (delete extra in dest)' },
+                    { opt: '/COPYALL', label: '/COPYALL (all file info)' },
+                    { opt: '/COPY:DAT', label: '/COPY:DAT (data, attrs, timestamps)' },
+                    { opt: '/DCOPY:DAT', label: '/DCOPY:DAT (dir timestamps)' },
+                    { opt: '/SEC', label: '/SEC (copy with security)' },
+                    { opt: '/SECFIX', label: '/SECFIX (fix security)' },
+                    { opt: '/TIMFIX', label: '/TIMFIX (fix timestamps)' }
+                ],
+                optsConfig.checkboxes
+            );
+            optionsDiv.appendChild(copyGroup);
 
             // File Selection Group
-            const fileGroup = document.createElement('div');
-            fileGroup.className = 'option-group';
-            const fileHeader = document.createElement('h3');
-            fileHeader.textContent = 'File Selection';
-            fileGroup.appendChild(fileHeader);
-
-            const fileCheckboxes = [
-                { opt: '/A', label: '/A (archive attribute only)' },
-                { opt: '/M', label: '/M (archive attr, reset after)' },
-                { opt: '/XO', label: '/XO (exclude older)' },
-                { opt: '/XN', label: '/XN (exclude newer)' },
-                { opt: '/XL', label: '/XL (exclude lonely - not in src)' },
-                { opt: '/XX', label: '/XX (exclude extra - not in dest)' },
-                { opt: '/FFT', label: '/FFT (FAT file times)' },
-                { opt: '/IS', label: '/IS (include same files)' },
-                { opt: '/IT', label: '/IT (include tweaked files)' }
-            ];
-
-            fileCheckboxes.forEach(ch => {
-                const label = document.createElement('label');
-                const input = document.createElement('input');
-                input.type = 'checkbox';
-                input.dataset.opt = ch.opt;
-                if (optsConfig.checkboxes && optsConfig.checkboxes.includes(ch.opt)) input.checked = true;
-                label.appendChild(input);
-                label.appendChild(document.createTextNode(ch.label));
-                fileGroup.appendChild(label);
-            });
-
-            div.appendChild(fileGroup);
+            const fileGroup = createOptionGroup(
+                'File Selection',
+                [
+                    { opt: '/A', label: '/A (archive attribute only)' },
+                    { opt: '/M', label: '/M (archive attr, reset after)' },
+                    { opt: '/XO', label: '/XO (exclude older)' },
+                    { opt: '/XN', label: '/XN (exclude newer)' },
+                    { opt: '/XL', label: '/XL (exclude lonely - not in src)' },
+                    { opt: '/XX', label: '/XX (exclude extra - not in dest)' },
+                    { opt: '/FFT', label: '/FFT (FAT file times)' },
+                    { opt: '/IS', label: '/IS (include same files)' },
+                    { opt: '/IT', label: '/IT (include tweaked files)' }
+                ],
+                optsConfig.checkboxes
+            );
+            optionsDiv.appendChild(fileGroup);
 
             // Performance Group
-            const perfGroup = document.createElement('div');
-            perfGroup.className = 'option-group';
-            const perfHeader = document.createElement('h3');
-            perfHeader.textContent = 'Performance';
-            perfGroup.appendChild(perfHeader);
-
-            const perfCheckboxes = [
-                { opt: '/Z', label: '/Z (restartable mode)' },
-                { opt: '/B', label: '/B (backup mode)' },
-                { opt: '/J', label: '/J (unbuffered I/O)' },
-                { opt: '/NOOFFLOAD', label: '/NOOFFLOAD (no Windows copy offload)' },
-                { opt: '/COMPRESS', label: '/COMPRESS (network compression)' }
-            ];
-
-            perfCheckboxes.forEach(ch => {
-                const label = document.createElement('label');
-                const input = document.createElement('input');
-                input.type = 'checkbox';
-                input.dataset.opt = ch.opt;
-                if (optsConfig.checkboxes && optsConfig.checkboxes.includes(ch.opt)) input.checked = true;
-                label.appendChild(input);
-                label.appendChild(document.createTextNode(ch.label));
-                perfGroup.appendChild(label);
-            });
-
-            div.appendChild(perfGroup);
+            const perfGroup = createOptionGroup(
+                'Performance',
+                [
+                    { opt: '/Z', label: '/Z (restartable mode)' },
+                    { opt: '/B', label: '/B (backup mode)' },
+                    { opt: '/J', label: '/J (unbuffered I/O)' },
+                    { opt: '/NOOFFLOAD', label: '/NOOFFLOAD (no Windows copy offload)' },
+                    { opt: '/COMPRESS', label: '/COMPRESS (network compression)' }
+                ],
+                optsConfig.checkboxes
+            );
+            optionsDiv.appendChild(perfGroup);
 
             // Logging Group
-            const logGroup = document.createElement('div');
-            logGroup.className = 'option-group';
-            const logHeader = document.createElement('h3');
-            logHeader.textContent = 'Logging';
-            logGroup.appendChild(logHeader);
-
-            const logCheckboxes = [
-                { opt: '/V', label: '/V (verbose output)' },
-                { opt: '/TEE', label: '/TEE (output to console + log)' },
-                { opt: '/NP', label: '/NP (no progress)' },
-                { opt: '/NFL', label: '/NFL (no file list)' },
-                { opt: '/NDL', label: '/NDL (no directory list)' },
-                { opt: '/NJH', label: '/NJH (no job header)' },
-                { opt: '/NJS', label: '/NJS (no job summary)' },
-                { opt: '/NC', label: '/NC (no class)' },
-                { opt: '/NS', label: '/NS (no size)' },
-                { opt: '/ETA', label: '/ETA (show estimated time)' }
-            ];
-
-            logCheckboxes.forEach(ch => {
-                const label = document.createElement('label');
-                const input = document.createElement('input');
-                input.type = 'checkbox';
-                input.dataset.opt = ch.opt;
-                if (optsConfig.checkboxes && optsConfig.checkboxes.includes(ch.opt)) input.checked = true;
-                label.appendChild(input);
-                label.appendChild(document.createTextNode(ch.label));
-                logGroup.appendChild(label);
-            });
-
-            div.appendChild(logGroup);
+            const logGroup = createOptionGroup(
+                'Logging',
+                [
+                    { opt: '/V', label: '/V (verbose output)' },
+                    { opt: '/TEE', label: '/TEE (output to console + log)' },
+                    { opt: '/NP', label: '/NP (no progress)' },
+                    { opt: '/NFL', label: '/NFL (no file list)' },
+                    { opt: '/NDL', label: '/NDL (no directory list)' },
+                    { opt: '/NJH', label: '/NJH (no job header)' },
+                    { opt: '/NJS', label: '/NJS (no job summary)' },
+                    { opt: '/NC', label: '/NC (no class)' },
+                    { opt: '/NS', label: '/NS (no size)' },
+                    { opt: '/ETA', label: '/ETA (show estimated time)' }
+                ],
+                optsConfig.checkboxes
+            );
+            optionsDiv.appendChild(logGroup);
 
             // Other Options Group
-            const otherGroup = document.createElement('div');
-            otherGroup.className = 'option-group';
-            const otherHeader = document.createElement('h3');
-            otherHeader.textContent = 'Other Options';
-            otherGroup.appendChild(otherHeader);
-
-            const otherCheckboxes = [
-                { opt: '/XJ', label: '/XJ (exclude junctions)' },
-                { opt: '/XJD', label: '/XJD (exclude junction dirs)' },
-                { opt: '/XJF', label: '/XJF (exclude junction files)' },
-                { opt: '/MON:1', label: '/MON:1 (monitor, run again on change)' },
-                { opt: '/MOT:1', label: '/MOT:1 (monitor, wait n min)' },
-                { opt: '/CREATE', label: '/CREATE (create dir tree only)' }
-            ];
-
-            otherCheckboxes.forEach(ch => {
-                const label = document.createElement('label');
-                const input = document.createElement('input');
-                input.type = 'checkbox';
-                input.dataset.opt = ch.opt;
-                if (optsConfig.checkboxes && optsConfig.checkboxes.includes(ch.opt)) input.checked = true;
-                label.appendChild(input);
-                label.appendChild(document.createTextNode(ch.label));
-                otherGroup.appendChild(label);
-            });
-
-            div.appendChild(otherGroup);
+            const otherGroup = createOptionGroup(
+                'Other Options',
+                [
+                    { opt: '/XJ', label: '/XJ (exclude junctions)' },
+                    { opt: '/XJD', label: '/XJD (exclude junction dirs)' },
+                    { opt: '/XJF', label: '/XJF (exclude junction files)' },
+                    { opt: '/MON:1', label: '/MON:1 (monitor, run again on change)' },
+                    { opt: '/MOT:1', label: '/MOT:1 (monitor, wait n min)' },
+                    { opt: '/CREATE', label: '/CREATE (create dir tree only)' }
+                ],
+                optsConfig.checkboxes
+            );
+            optionsDiv.appendChild(otherGroup);
 
             // Numeric Options
-            const numGroup = document.createElement('div');
-            numGroup.className = 'option-group';
-            const numHeader = document.createElement('h3');
-            numHeader.textContent = 'Numeric Options';
-            numGroup.appendChild(numHeader);
+            const numGroup = createNumericOptionsGroup(optsConfig.numbers);
+            optionsDiv.appendChild(numGroup);
 
-            const numbers = [
-                { opt: '/MT', label: '/MT (multi-thread): ', min: 1, max: 128 },
-                { opt: '/R', label: '/R (retries): ', min: 0 },
-                { opt: '/W', label: '/W (wait sec): ', min: 0 },
-                { opt: '/MINAGE', label: '/MINAGE (min file age days): ', min: 0 },
-                { opt: '/MAXAGE', label: '/MAXAGE (max file age days): ', min: 0 },
-                { opt: '/MINLAD', label: '/MINLAD (min last access days): ', min: 0 },
-                { opt: '/MAXLAD', label: '/MAXLAD (max last access days): ', min: 0 }
-            ];
+            div.appendChild(optionsDiv);
 
-            numbers.forEach(num => {
-                const label = document.createElement('label');
-                label.appendChild(document.createTextNode(num.label));
-                const input = document.createElement('input');
-                input.type = 'number';
-                input.dataset.opt = num.opt;
-                if (num.min !== undefined) input.min = num.min;
-                if (num.max !== undefined) input.max = num.max;
-                if (optsConfig.numbers && optsConfig.numbers[num.opt]) input.value = optsConfig.numbers[num.opt];
-                label.appendChild(input);
-                numGroup.appendChild(label);
-            });
-
-            div.appendChild(numGroup);
-
+            // Additional options
             const additional = document.createElement('input');
             additional.type = 'text';
             additional.className = 'additional';
@@ -550,6 +448,7 @@
             additional.value = optsConfig.additional || '';
             div.appendChild(additional);
 
+            // Remove button
             const removeBtn = document.createElement('button');
             removeBtn.className = 'remove';
             removeBtn.textContent = 'Remove';
@@ -565,39 +464,162 @@
                 input.addEventListener(eventType, updateGenerated);
             });
 
+            // Copy mode toggle event listeners
+            const copyModeRadios = div.querySelectorAll('input[name="copyMode"]');
+            copyModeRadios.forEach(radio => {
+                radio.addEventListener('change', () => {
+                    const isMulti = radio.value === 'multi';
+                    destInput.style.display = isMulti ? 'none' : 'block';
+                    destinationsContainer.style.display = isMulti ? 'block' : 'none';
+                    updateGenerated();
+                });
+            });
+
             return div;
+        }
+
+        function createOptionGroup(title, options, checkedOptions) {
+            const group = document.createElement('div');
+            group.className = 'option-group collapsed';
+            
+            const header = document.createElement('h3');
+            header.textContent = title;
+            header.addEventListener('click', () => {
+                group.classList.toggle('collapsed');
+            });
+            group.appendChild(header);
+            
+            const content = document.createElement('div');
+            content.className = 'options-content';
+            
+            options.forEach(ch => {
+                const label = document.createElement('label');
+                const input = document.createElement('input');
+                input.type = 'checkbox';
+                input.dataset.opt = ch.opt;
+                if (checkedOptions && checkedOptions.includes(ch.opt)) input.checked = true;
+                label.appendChild(input);
+                label.appendChild(document.createTextNode(ch.label));
+                content.appendChild(label);
+            });
+            
+            group.appendChild(content);
+            return group;
+        }
+
+        function createNumericOptionsGroup(numbers) {
+            const group = document.createElement('div');
+            group.className = 'option-group collapsed';
+            
+            const header = document.createElement('h3');
+            header.textContent = 'Numeric Options';
+            header.addEventListener('click', () => {
+                group.classList.toggle('collapsed');
+            });
+            group.appendChild(header);
+            
+            const content = document.createElement('div');
+            content.className = 'options-content';
+            
+            const numericOptions = [
+                { opt: '/MT', label: '/MT (multi-thread): ', min: 1, max: 128 },
+                { opt: '/R', label: '/R (retries): ', min: 0 },
+                { opt: '/W', label: '/W (wait sec): ', min: 0 },
+                { opt: '/MINAGE', label: '/MINAGE (min file age days): ', min: 0 },
+                { opt: '/MAXAGE', label: '/MAXAGE (max file age days): ', min: 0 },
+                { opt: '/MINLAD', label: '/MINLAD (min last access days): ', min: 0 },
+                { opt: '/MAXLAD', label: '/MAXLAD (max last access days): ', min: 0 }
+            ];
+            
+            numericOptions.forEach(num => {
+                const label = document.createElement('label');
+                label.appendChild(document.createTextNode(num.label));
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.dataset.opt = num.opt;
+                if (num.min !== undefined) input.min = num.min;
+                if (num.max !== undefined) input.max = num.max;
+                if (numbers && numbers[num.opt]) input.value = numbers[num.opt];
+                label.appendChild(input);
+                content.appendChild(label);
+            });
+            
+            group.appendChild(content);
+            return group;
+        }
+
+        function createDestinationItem(value = '') {
+            const container = document.createElement('div');
+            container.className = 'destination';
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.placeholder = 'Destination directory';
+            input.value = value;
+            input.addEventListener('input', updateGenerated);
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'remove';
+            removeBtn.textContent = 'Remove';
+            removeBtn.addEventListener('click', () => {
+                container.remove();
+                updateGenerated();
+            });
+            
+            container.appendChild(input);
+            container.appendChild(removeBtn);
+            
+            return container;
         }
 
         function updateGenerated() {
             const commands = document.querySelectorAll('.command');
             const lines = ['@echo off', ''];
+            
             commands.forEach(cmd => {
                 const source = cmd.querySelector('.source').value.trim();
-                const dest = cmd.querySelector('.dest').value.trim();
-                if (!source || !dest) return;
-
+                if (!source) return;
+                
+                const isMultiDest = cmd.querySelector('input[name="copyMode"]:checked').value === 'multi';
+                
+                let destinations = [];
+                if (isMultiDest) {
+                    const destInputs = cmd.querySelectorAll('.destinations-list .destination input');
+                    destInputs.forEach(input => {
+                        const dest = input.value.trim();
+                        if (dest) destinations.push(dest);
+                    });
+                } else {
+                    const dest = cmd.querySelector('.dest').value.trim();
+                    if (dest) destinations.push(dest);
+                }
+                
+                if (destinations.length === 0) return;
+                
                 const opts = [];
-
+                
                 cmd.querySelectorAll('input[type="checkbox"]:checked').forEach(ch => {
                     opts.push(ch.dataset.opt);
                 });
-
+                
                 cmd.querySelectorAll('input[type="number"][data-opt]').forEach(num => {
                     const val = num.value.trim();
                     if (val) {
                         opts.push(num.dataset.opt + ':' + val);
                     }
                 });
-
+                
                 const add = cmd.querySelector('.additional').value.trim();
                 if (add) opts.push(add);
-
+                
                 let quotedSource = source.includes(' ') ? '"' + source + '"' : source;
-                let quotedDest = dest.includes(' ') ? '"' + dest + '"' : dest;
-
-                lines.push('robocopy ' + quotedSource + ' ' + quotedDest + ' ' + opts.join(' '));
+                
+                destinations.forEach(dest => {
+                    let quotedDest = dest.includes(' ') ? '"' + dest + '"' : dest;
+                    lines.push('robocopy ' + quotedSource + ' ' + quotedDest + ' ' + opts.join(' '));
+                });
             });
-
+            
             document.getElementById('generated-bat').value = lines.join('\n');
         }
 
