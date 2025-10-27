@@ -295,9 +295,9 @@
         const PRESETS = {
             preset1: {
                 name: 'Basic Mirror',
-                checkboxes: ['/MIR', '/S', '/Z', '/XO'],
+                checkboxes: ['/MIR', '/S', '/Z', '/XO, /TEE, /XJ, /FFT, /XA:SH, /ETA, /LOG+:"!LogFile!"'],
                 numbers: {'/R': '1', '/W': '1'},
-                additional: '/TEE /XJ /FFT /XA:SH /ETA /LOG+:"!LogFile!"'
+                additional: ''
             },
             preset2: {
                 name: 'Incremental Sync',
@@ -483,9 +483,9 @@ robocopy "C:\\Source" "D:\\Mirror" /MIR /MON:1 /MOT:1 /LOG:C:\\Logs\\sync.log
         }
 
         function createCommand(source = '', dest = '', optsConfig = {}, isMultiDest = false) {
-            if (!optsConfig.checkboxes) optsConfig.checkboxes = ['/MIR', '/S', '/Z', '/XO'];
+            if (!optsConfig.checkboxes) optsConfig.checkboxes = ['/MIR', '/S', '/Z', '/XO', '/TEE', '/XJ', '/FFT'];
             if (!optsConfig.numbers) optsConfig.numbers = {'/R': '1', '/W': '1'};
-            if (!optsConfig.additional) optsConfig.additional = '/TEE /XJ /FFT /XA:SH /ETA /LOG+:"!LogFile!"';
+            if (!optsConfig.additional) optsConfig.additional = '/XA:SH /ETA /LOG+:"!LogFile!"';
 
             const div = document.createElement('div');
             div.className = 'command';
