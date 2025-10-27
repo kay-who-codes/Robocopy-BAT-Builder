@@ -258,18 +258,10 @@
                 <option value="preset1">Basic Mirror</option>
                 <option value="preset2">Incremental Sync</option>
                 <option value="preset3">Archive Copy</option>
-                <option value="preset4">Fast Network Copy</option>
-                <option value="preset5">Verified Backup</option>
-                <option value="preset6">Cloud Sync (OneDrive/Dropbox)</option>
-                <option value="preset7">Media Files Only</option>
-                <option value="preset8">Differential Backup</option>
-                <option value="preset9">Move Files (Delete Source)</option>
-                <option value="preset10">Large File Transfer</option>
-                <option value="preset11">Server to Server Replication</option>
-                <option value="preset12">Quick Directory Structure Only</option>
-                <option value="preset13">Photo/Video Backup</option>
-                <option value="preset14">Development Code Sync</option>
-                <option value="preset15">NAS Backup with Monitoring</option>
+                <option value="preset4">Cloud Sync (OneDrive/Dropbox)</option>
+                <option value="preset5">Media Files Only</option>
+                <option value="preset6">Differential Backup</option>
+                <option value="preset7">Photo/Video Backup</option>
             </select>
             <button id="apply-preset">Apply Preset</button>
         </section>
@@ -320,76 +312,28 @@
                 additional: '/A /M /LOG+:"archive.log"'
             },
             preset4: {
-                name: 'Fast Network Copy',
-                checkboxes: ['/E', '/J', '/COMPRESS'],
-                numbers: {'/MT': '32', '/R': '2', '/W': '3'},
-                additional: '/NFL /NDL /NJH /NJS /NC /NS /NP'
-            },
-            preset5: {
-                name: 'Verified Backup',
-                checkboxes: ['/MIR', '/COPYALL', '/Z', '/SEC', '/B'],
-                numbers: {'/R': '3', '/W': '5'},
-                additional: '/V /ETA /TEE /LOG+:"backup.log"'
-            },
-            preset6: {
                 name: 'Cloud Sync (OneDrive/Dropbox)',
                 checkboxes: ['/E', '/XO', '/FFT'],
                 numbers: {'/R': '2', '/W': '5'},
                 additional: '/XJ /XJD /XJF /XD "~$*" /XF "*.tmp" "~*.tmp" "desktop.ini" "Thumbs.db" /LOG+:"cloud_sync.log"'
             },
-            preset7: {
+            preset5: {
                 name: 'Media Files Only',
                 checkboxes: ['/S', '/XO'],
                 numbers: {'/R': '1', '/W': '1'},
                 additional: '/XF *.txt *.doc* *.xls* *.pdf /XA:SH /LOG+:"media.log"'
             },
-            preset8: {
+            preset6: {
                 name: 'Differential Backup',
                 checkboxes: ['/S', '/A', '/XO'],
                 numbers: {'/R': '2', '/W': '5'},
                 additional: '/XJ /FFT /ETA /LOG+:"differential_%date:~-4,4%%date:~-10,2%%date:~-7,2%.log"'
             },
-            preset9: {
-                name: 'Move Files (Delete Source)',
-                checkboxes: ['/S', '/COPYALL'],
-                numbers: {'/R': '1', '/W': '1'},
-                additional: '/MOVE /XJ /LOG+:"move.log"'
-            },
-            preset10: {
-                name: 'Large File Transfer',
-                checkboxes: ['/J', '/Z', '/NOOFFLOAD'],
-                numbers: {'/MT': '8', '/R': '5', '/W': '30'},
-                additional: '/ETA /BYTES /NP /LOG+:"large_transfer.log"'
-            },
-            preset11: {
-                name: 'Server to Server Replication',
-                checkboxes: ['/MIR', '/COPYALL', '/SEC', '/B', '/DCOPY:DAT'],
-                numbers: {'/R': '5', '/W': '10'},
-                additional: '/V /ETA /TEE /XJ /LOG+:"replication_%COMPUTERNAME%.log"'
-            },
-            preset12: {
-                name: 'Quick Directory Structure Only',
-                checkboxes: ['/E', '/CREATE'],
-                numbers: {'/R': '0', '/W': '0'},
-                additional: '/NFL /NDL /LOG+:"structure.log"'
-            },
-            preset13: {
+            preset7: {
                 name: 'Photo/Video Backup',
                 checkboxes: ['/S', '/COPYALL', '/DCOPY:DAT', '/XO'],
                 numbers: {'/R': '2', '/W': '5'},
                 additional: '/XF *.db *.ini /XD "@eaDir" "System Volume Information" "$RECYCLE.BIN" /LOG+:"photos_%date:~-4,4%-%date:~-10,2%-%date:~-7,2%.log"'
-            },
-            preset14: {
-                name: 'Development Code Sync',
-                checkboxes: ['/E', '/XO', '/FFT'],
-                numbers: {'/R': '1', '/W': '1'},
-                additional: '/XD node_modules .git bin obj .vs .vscode dist build /XF *.exe *.dll *.pdb /LOG+:"dev_sync.log"'
-            },
-            preset15: {
-                name: 'NAS Backup with Monitoring',
-                checkboxes: ['/MIR', '/Z', '/COPYALL'],
-                numbers: {'/R': '10', '/W': '30', '/MT': '4'},
-                additional: '/MON:5 /TEE /ETA /XJ /LOG+:"nas_backup.log"'
             }
         };
       
